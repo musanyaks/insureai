@@ -1,0 +1,29 @@
+# artifacts & secrets
+models/*
+!models/.gitkeep
+data/seed/large/
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# node
+node_modules/
+.next/
+
+# R
+.Rproj.user/
+.Rhistory
+.RData
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

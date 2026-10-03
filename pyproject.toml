@@ -1,0 +1,20 @@
+[project]
+name = "insureai"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi", "uvicorn", "pydantic", "pydantic-settings",
+  "langgraph", "sqlalchemy", "alembic", "psycopg[binary]", "pgvector",
+  "confluent-kafka", "scikit-learn", "xgboost", "shap", "numpy", "pandas",
+  "httpx", "pyjwt", "jinja2", "pyyaml", "mlflow",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "faker"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/insureai"]
