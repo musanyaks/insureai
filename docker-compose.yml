@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: insureai
+      POSTGRES_PASSWORD: insureai
+      POSTGRES_DB: insureai
+    ports: ["5433:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # initdb scripts run only on FIRST boot of a fresh volume.
+      # After schema changes: docker compose down -v then up.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insureai"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Redpanda: Kafka-API-compatible, single binary, no ZooKeeper (ADR-002).
+  # Two listeners, one broker: containers reach redpanda:9092 (INTERNAL),
+  # Windows host reaches localhost:9095 (HOST). Names in --kafka-addr and
+  # --advertise-kafka-addr must match exactly.
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    command:
+      - redpanda
+      - start
+      - --kafka-addr
+      - INTERNAL://0.0.0.0:9092,HOST://0.0.0.0:9095
+      - --advertise-kafka-addr
+      - INTERNAL://redpanda:9092,HOST://localhost:9095
+      - --smp
+      - "1"
+      - --memory
+      - 512M
+      - --overprovisioned
+    ports: ["9095:9095"]
+
+  api:
+    build: .
+    command: uvicorn insureai.api.main:app --host 0.0.0.0 --port 8000
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres        # container-internal values —
+      POSTGRES_PORT: 5432            # these four override .env inside the container
+      KAFKA_BOOTSTRAP: redpanda:9092
+      BUS_BACKEND: kafka
+    ports: ["8000:8000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_started
+
+  # Agent fleet: consumes COMMANDS + RESULTS, drives the investigation pipeline.
+  # The API stays a pure publisher; all orchestration happens here.
+  worker:
+    build: .
+    command: python -m insureai.agents.worker
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      KAFKA_BOOTSTRAP: redpanda:9092
+      BUS_BACKEND: kafka
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_started
+
+volumes:
+  pgdata:

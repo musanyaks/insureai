@@ -1,16 +1,24 @@
 [project]
 name = "insureai"
 version = "0.1.0"
-requires-python = ">=3.11"
+description = "Multi-agent insurance intelligence platform"
+requires-python = ">=3.10"
 dependencies = [
-  "fastapi", "uvicorn", "pydantic", "pydantic-settings",
-  "langgraph", "sqlalchemy", "alembic", "psycopg[binary]", "pgvector",
-  "confluent-kafka", "scikit-learn", "xgboost", "shap", "numpy", "pandas",
-  "httpx", "pyjwt", "jinja2", "pyyaml", "mlflow",
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "psycopg[binary,pool]>=3.1",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "confluent-kafka>=2.4",
+    "pyjwt>=2.8",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "faker"]
+ml = ["xgboost>=2.0", "shap>=0.45", "scikit-learn>=1.4", "joblib>=1.3"]
+llm = ["openai>=1.30", "langgraph>=0.1"]
+dev = ["pytest>=8.2", "ruff>=0.4", "mypy>=1.10", "httpx>=0.27"]
 
 [build-system]
 requires = ["hatchling"]
@@ -18,3 +26,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/insureai"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests", "data"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
