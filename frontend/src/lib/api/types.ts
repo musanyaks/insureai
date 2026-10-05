@@ -131,7 +131,3 @@ export const CountyRisk = z.object({
 });
 
 export const TypologySlice = z.object({ typology: z.string(), claims: z.number() });
-
-export const TypologySlice = z.object({ typology: z.string(), claims: z.number() });
-
-export const TypologySlice = z.object({ typology: z.string(), claims: z.number() });

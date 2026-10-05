@@ -87,5 +87,4 @@ export const sendChat = (message: string) => post("/chat", t.ChatResponse, { mes
 export const getTypologies = () =>
   get("/analytics/typologies", z.object({ items: z.array(t.TypologySlice) }));
 
-export const getTypologies = () =>
   get("/analytics/typologies", z.object({ items: z.array(t.TypologySlice) }));
