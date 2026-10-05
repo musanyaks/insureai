@@ -21,8 +21,19 @@ def api():
         pytest.skip("postgres not available")
     from insureai.api.main import app
     with TestClient(app) as client:
-        yield client
+        # Audit-only consumer standing in for the orchestrator: with audit at
+        # the consumption point (ADR-005), the trace is fed by the consumer.
+        # The pipeline itself is covered by test_orchestrator.py.
+        from insureai.agents.base import BaseAgent
 
+        class OrchestratorSink(BaseAgent):
+            name = "orchestrator"
+
+            def handle(self, envelope):
+                return None
+
+        OrchestratorSink(client.app.state.bus, client.app.state.audit)
+        yield client
 
 @pytest.fixture(scope="module")
 def token(api):

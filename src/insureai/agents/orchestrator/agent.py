@@ -48,21 +48,35 @@ class OrchestratorAgent(BaseAgent):
         return None   # orchestrator publishes commands; nothing replies to it
 
     # -- pipeline steps -----------------------------------------------------
-    def _start_pipeline(self, env: AgentEnvelope, claim_id: str) -> None:
+        def _start_pipeline(self, env: AgentEnvelope, claim_id: str) -> None:
         if not claim_id:
             return
         with get_conn(self.dsn) as conn:
             inv = ensure_investigation(conn, claim_id=claim_id)
-        if inv is None or inv["already_running"]:
+        if inv is None:
+            return
+        inv_id = inv["investigation_id"]
+        # Replay-safety: an investigation created before the worker existed sits
+        # in RUNNING with no pipeline activity — start it rather than bounce.
+        if inv["already_running"] and self._pipeline_started(inv_id):
             return
         self.bus.publish(
             AgentEnvelope(
-                correlation_id=inv["investigation_id"], from_agent=self.name,
+                correlation_id=inv_id, from_agent=self.name,
                 to_agent="claims", event="claim.context_requested",
                 priority=env.priority, payload={"claim_id": claim_id},
             ),
-            topic=self.bus.__class__.__mro__ and _commands_topic(self.bus),
+            topic=_commands_topic(self.bus),
         )
+
+    def _pipeline_started(self, inv_id: str) -> bool:
+        with get_conn(self.dsn) as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM agent_messages WHERE correlation_id = %s "
+                "AND event = 'claim.context_requested' LIMIT 1",
+                (inv_id,),
+            )
+            return cur.fetchone() is not None)
 
     def _maybe_auto_investigate(self, env: AgentEnvelope) -> None:
         claim_id = str(env.payload.get("claim_id", ""))
