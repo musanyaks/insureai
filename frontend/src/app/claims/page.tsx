@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getClaims } from "@/lib/api/client";
 import { kes } from "@/lib/format";
@@ -9,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-export default function ClaimsPage() {
+function ClaimsTable() {
   const params = useSearchParams();
-const [fraud, setFraud] = useState<boolean | undefined>(params.get("fraud") === "true" ? true : undefined);
+  const [fraud, setFraud] = useState<boolean | undefined>(
+    params.get("fraud") === "true" ? true : undefined);
   const [county, setCounty] = useState("");
   const [offset, setOffset] = useState(0);
   const q = useQuery({ queryKey: ["claims", fraud, county, offset],
@@ -65,5 +67,13 @@ const [fraud, setFraud] = useState<boolean | undefined>(params.get("fraud") === 
                 onClick={() => setOffset(o => o + 25)}>Next</Button>
       </div>
     </div>
+  );
+}
+
+export default function ClaimsPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-muted-foreground">loading…</p>}>
+      <ClaimsTable />
+    </Suspense>
   );
 }

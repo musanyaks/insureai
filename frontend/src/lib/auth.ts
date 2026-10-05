@@ -12,10 +12,15 @@ export function clearToken(): void {
 
 /**
  * Dev auth: auto-mints an officer JWT via the backend's dev-only endpoint.
- * SWAP POINT for Keycloak/OIDC: replace this function with an authorization-
- * code redirect flow. Nothing else in the app touches tokens.
+ * Client-only by design: during the SSR pass there is no localStorage and no
+ * session, so we throw — React Query fails that attempt cleanly and refetches
+ * in the browser. SWAP POINT for Keycloak/OIDC: replace this function with an
+ * authorization-code redirect flow. Nothing else in the app touches tokens.
  */
 export async function ensureToken(): Promise<string> {
+  if (typeof window === "undefined") {
+    throw new Error("ensureToken is client-only (called during SSR)");
+  }
   const existing = getToken();
   if (existing) return existing;
   const res = await fetch(`${API_URL}/auth/dev-token`, {
