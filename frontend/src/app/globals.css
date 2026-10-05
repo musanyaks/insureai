@@ -128,3 +128,25 @@
     @apply font-sans;
   }
 }
+/* INSUREAI navy theme — appended override, later block wins */
+.dark {
+  --background: #0a1220;
+  --foreground: #e2e8f0;
+  --card: #0f1a2e;
+  --card-foreground: #e2e8f0;
+  --popover: #0f1a2e;
+  --popover-foreground: #e2e8f0;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #1a2942;
+  --secondary-foreground: #cbd5e1;
+  --muted: #16233a;
+  --muted-foreground: #7c8db0;
+  --accent: #16233a;
+  --accent-foreground: #e2e8f0;
+  --destructive: #ef4444;
+  --border: #1e2d47;
+  --input: #1e2d47;
+  --ring: #3b82f6;
+  --radius: 0.75rem;
+}
